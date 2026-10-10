@@ -17,6 +17,10 @@ function traduzirErro(msg: string, modo: Modo): string {
   if (m.includes('already registered') || m.includes('already exists')) return 'Esse usuário já existe. Escolha outro.';
   if (m.includes('password') && (m.includes('6') || m.includes('weak') || m.includes('short'))) return 'A senha precisa ter pelo menos 6 caracteres.';
   if (m.includes('signups not allowed') || m.includes('signup is disabled')) return 'O cadastro está desligado. Fale com o coordenador.';
+  // Provedor "Email" desligado no Supabase: bloqueia cadastro e login por senha.
+  if (m.includes('email signups are disabled') || m.includes('email logins are disabled') || m.includes('provider is disabled')) {
+    return 'Login por usuário e senha desligado no servidor. Avise o coordenador.';
+  }
   if (m.includes('email not confirmed')) return 'Conta ainda não confirmada. Fale com o coordenador.';
   if (m.includes('rate limit') || m.includes('too many')) return 'Muitas tentativas. Espere alguns minutos e tente de novo.';
   if (m.includes('fetch') || m.includes('network')) return 'Sem conexão com o servidor. Tente de novo.';
