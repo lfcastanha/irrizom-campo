@@ -4,7 +4,12 @@ export type Obra = { id: string; codigo: string | null; cliente: string; proprie
 export type Etapa = { id: number; nome: string; unidade: string };
 export type Item = { id: number; nome: string };
 export type Funcionario = { id: string; nome: string; funcao: string; equipe_id: string | null };
-export type Perfil = { id: string; nome: string; papel: 'admin' | 'encarregado'; equipe_id: string | null; equipe_nome: string | null };
+export type Perfil = {
+  id: string; nome: string; usuario: string | null; papel: 'admin' | 'encarregado';
+  /** false = cadastrou pelo app e ainda espera o admin liberar. Perfis guardados antes disso vêm sem o campo. */
+  ativo?: boolean;
+  equipe_id: string | null; equipe_nome: string | null;
+};
 
 export type Listas = {
   obras: Obra[];
@@ -87,7 +92,7 @@ export async function carregarPerfil(): Promise<Perfil | null> {
   if (!session) return null;
   const { data, error } = await c
     .from('perfis')
-    .select('id,nome,papel,equipe_id,equipes(nome)')
+    .select('id,nome,usuario,papel,ativo,equipe_id,equipes(nome)')
     .eq('id', session.user.id)
     .single();
   if (error) throw new Error(error.message);
@@ -95,7 +100,9 @@ export async function carregarPerfil(): Promise<Perfil | null> {
   const perfil: Perfil = {
     id: data.id,
     nome: data.nome,
+    usuario: data.usuario,
     papel: data.papel,
+    ativo: data.ativo,
     equipe_id: data.equipe_id,
     equipe_nome: eq?.nome ?? null,
   };

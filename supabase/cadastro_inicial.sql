@@ -34,21 +34,22 @@ insert into public.obras_financeiro (obra_id, valor_contrato, orcado_mao_obra, o
 values ((select id from public.obras where codigo = '2026-031'), 60000, 6000, 30000, 800, 200);
 
 -- 6. Perfis dos logins --------------------------------------------------
---    Primeiro crie os usuários em Authentication → Users → "Add user"
---    (marque "Auto Confirm User"). O perfil é criado sozinho.
---    Depois rode, trocando os e-mails:
+--    Os encarregados podem se cadastrar pelo app (aba "Cadastrar") e você libera no painel.
+--    Para criar à mão: Authentication → Users → "Add user" (marque "Auto Confirm User").
+--    Use o e-mail USUARIO@irrizom.app: no app, a pessoa entra só com USUARIO.
+--    O perfil é criado sozinho, mas bloqueado (ativo = false). Depois rode, trocando os e-mails:
 
 -- Você como administrador:
-update public.perfis set papel = 'admin', nome = 'Lucas'
+update public.perfis set papel = 'admin', ativo = true, nome = 'Lucas'
 where id = (select id from auth.users where email = 'SEU-EMAIL@exemplo.com');
 
 -- Cada encarregado ligado à sua equipe:
 update public.perfis
-set nome = 'João (Equipe 1)', equipe_id = (select id from public.equipes where nome = 'Equipe 1')
+set ativo = true, nome = 'João (Equipe 1)', equipe_id = (select id from public.equipes where nome = 'Equipe 1')
 where id = (select id from auth.users where email = 'equipe1@irrizom.app');
 
 update public.perfis
-set nome = 'Carlos (Equipe 2)', equipe_id = (select id from public.equipes where nome = 'Equipe 2')
+set ativo = true, nome = 'Carlos (Equipe 2)', equipe_id = (select id from public.equipes where nome = 'Equipe 2')
 where id = (select id from auth.users where email = 'equipe2@irrizom.app');
 
 -- 7. Fechamento de uma obra (quando entregar) ----------------------------

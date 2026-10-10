@@ -21,6 +21,7 @@ type ObraInd = {
   diarias_sem_custo: number; ultimo_dia: string | null;
 };
 type Equipe = { id: string; nome: string };
+type Cadastro = { id: string; nome: string; usuario: string | null; criado_em: string };
 
 const n1 = (v: number | null | undefined) =>
   v == null ? '—' : Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -58,6 +59,9 @@ export default function Painel() {
   const [obras, setObras] = useState<ObraInd[]>([]);
   const [equipes, setEquipes] = useState<Equipe[]>([]);
   const [fotos, setFotos] = useState<Record<string, string[]>>({});
+  const [cadastros, setCadastros] = useState<Cadastro[]>([]);
+  const [equipeDe, setEquipeDe] = useState<Record<string, string>>({});
+  const [liberando, setLiberando] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState('');
 
@@ -72,14 +76,17 @@ export default function Painel() {
     setErro('');
     try {
       const c = sb();
-      const [r, o, e] = await Promise.all([
+      const [r, o, e, cad] = await Promise.all([
         c.from('v_registros').select('*').gte('data', inicio).order('data', { ascending: false }).order('recebido_em', { ascending: false }).limit(5000),
         c.from('v_obras_indicadores').select('*').neq('status', 'cancelada').order('ultimo_dia', { ascending: false, nullsFirst: false }),
         c.from('equipes').select('id,nome').eq('ativa', true).order('nome'),
+        c.from('perfis').select('id,nome,usuario,criado_em').eq('ativo', false).neq('papel', 'admin').order('criado_em'),
       ]);
       if (r.error) throw r.error;
       if (o.error) throw o.error;
       if (e.error) throw e.error;
+      if (cad.error) throw cad.error;
+      setCadastros(cad.data as Cadastro[]);
       setRegs(r.data as Reg[]);
       setObras(o.data as ObraInd[]);
       setEquipes(e.data as Equipe[]);
@@ -154,6 +161,16 @@ export default function Painel() {
     };
   }, [regs, equipes]);
 
+  async function liberar(x: Cadastro) {
+    const equipe = equipeDe[x.id] ?? '';
+    if (!equipe && !confirm(`Liberar ${x.nome} sem equipe? Sem equipe, o formulário não separa os funcionários da equipe.`)) return;
+    setLiberando(x.id);
+    const { error } = await sb().from('perfis').update({ ativo: true, equipe_id: equipe || null }).eq('id', x.id);
+    setLiberando('');
+    if (error) { alert(`Não foi possível liberar: ${error.message}`); return; }
+    setCadastros((l) => l.filter((y) => y.id !== x.id));
+  }
+
   function exportarCSV() {
     if (!regs.length) return;
     const cols = Object.keys(regs[0]) as (keyof Reg)[];
@@ -199,6 +216,39 @@ export default function Painel() {
 
       {!carregando && !erro && (
         <>
+          {cadastros.length > 0 && (
+            <section className="secao">
+              <h2>Cadastros aguardando liberação</h2>
+              <div className="tabela-wrap">
+                <table>
+                  <thead><tr><th>Nome</th><th>Usuário</th><th>Cadastrou em</th><th>Equipe</th><th /></tr></thead>
+                  <tbody>
+                    {cadastros.map((x) => (
+                      <tr key={x.id}>
+                        <td>{x.nome}</td>
+                        <td>{x.usuario ?? '—'}</td>
+                        <td>{new Date(x.criado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                        <td>
+                          <select value={equipeDe[x.id] ?? ''} onChange={(ev) => setEquipeDe((m) => ({ ...m, [x.id]: ev.target.value }))}
+                            style={{ minHeight: 40, padding: '6px 10px' }}>
+                            <option value="">Sem equipe</option>
+                            {equipes.map((e) => <option key={e.id} value={e.id}>{e.nome}</option>)}
+                          </select>
+                        </td>
+                        <td>
+                          <button className="botao peq" onClick={() => liberar(x)} disabled={liberando === x.id}>
+                            {liberando === x.id ? 'Liberando…' : 'Liberar'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="dica">Não reconhece alguém? Não libere; apague o login em Supabase → Authentication → Users.</p>
+            </section>
+          )}
+
           <section className="secao">
             <h2>Quem já registrou</h2>
             <div className="tabela-wrap">

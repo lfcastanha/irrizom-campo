@@ -261,7 +261,39 @@ export default function RegistroDiario() {
     await atualizarFila();
   }
 
+  async function verificarLiberacao() {
+    setErros([]);
+    try {
+      const p = await carregarPerfil();
+      if (p) setPerfil(p);
+      if (p?.ativo !== false) setListas(await atualizarListas());
+    } catch (err) {
+      setErros([`Não foi possível verificar: ${(err as Error).message}`]);
+    }
+  }
+
   if (!pronto) return <div className="carregando">Carregando…</div>;
+
+  // Cadastrou pelo app e o coordenador ainda não liberou.
+  if (perfil?.ativo === false) {
+    return (
+      <main className="aguardando">
+        <div>
+          <div className="icone">⏳</div>
+          <h1>Cadastro aguardando liberação</h1>
+          <p style={{ margin: 0 }}>
+            Olá, {perfil.nome}! O coordenador precisa liberar seu acesso{perfil.usuario ? <> (usuário <b>{perfil.usuario}</b>)</> : null}.
+            Fale com o coordenador e depois toque em verificar.
+          </p>
+          {erros.length > 0 && <div className="erros">{erros[0]}</div>}
+          <button className="botao" onClick={verificarLiberacao} disabled={!online}>
+            {online ? 'Verificar de novo' : 'Sem sinal'}
+          </button>
+          <button className="botao sec" onClick={sair}>Sair</button>
+        </div>
+      </main>
+    );
+  }
 
   const topo = (
     <header className="topo">

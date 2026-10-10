@@ -164,6 +164,16 @@ textarea { min-height: 70px; resize: vertical; }
 .login { min-height: 100dvh; display: grid; place-items: center; padding: 16px; }
 .login form { width: 100%; max-width: 380px; display: grid; gap: 12px; }
 .login h1 { color: var(--verde); margin: 0 0 4px; }
+.login .abas .chip { min-height: 52px; font-size: 17px; }
+.senha { display: flex; gap: 8px; align-items: stretch; }
+.senha input { flex: 1; min-width: 0; }
+.senha .botao { flex-shrink: 0; min-height: 50px; }
+
+/* Cadastro aguardando liberação */
+.aguardando { min-height: 100dvh; display: grid; place-items: center; padding: 16px; text-align: center; }
+.aguardando > div { max-width: 380px; display: grid; gap: 12px; }
+.aguardando .icone { font-size: 48px; }
+.aguardando h1 { color: var(--verde); margin: 0; font-size: 22px; }
 
 /* ---------- Painel ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 12px 0; }
