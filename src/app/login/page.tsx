@@ -12,6 +12,8 @@ type Modo = 'entrar' | 'cadastrar';
 
 function traduzirErro(msg: string, modo: Modo): string {
   const m = msg.toLowerCase();
+  // Site publicado sem as variáveis do Supabase: não é culpa de quem está tentando entrar.
+  if (m.startsWith('configure next_public')) return 'App sem configuração do servidor. Avise o coordenador.';
   if (m.includes('already registered') || m.includes('already exists')) return 'Esse usuário já existe. Escolha outro.';
   if (m.includes('password') && (m.includes('6') || m.includes('weak') || m.includes('short'))) return 'A senha precisa ter pelo menos 6 caracteres.';
   if (m.includes('signups not allowed') || m.includes('signup is disabled')) return 'O cadastro está desligado. Fale com o coordenador.';
